@@ -36,7 +36,7 @@
             android:layout_alignParentBottom="true"
             android:layout_marginStart="137dp"
             android:layout_marginEnd="127dp"
-            android:layout_marginBottom="49dp"
+            android:layout_marginBottom="28dp"
             android:contentDescription="@string/camera"
             android:scaleType="centerCrop"
             android:src="@android:drawable/ic_menu_camera" />
@@ -62,6 +62,19 @@
             android:layout_marginBottom="427dp"
             android:background="@color/BLACK"
             tools:src="@android:drawable/ic_menu_camera" />
+
+        <TextView
+            android:id="@+id/authResultTextView"
+            android:layout_width="187dp"
+            android:layout_height="51dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="113dp"
+            android:layout_marginEnd="111dp"
+            android:background="@color/BISQUE"
+            android:layout_marginBottom="94dp"
+            android:text="TextView" />
 
     </RelativeLayout>
 </FrameLayout>

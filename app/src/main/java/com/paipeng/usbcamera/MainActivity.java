@@ -11,10 +11,16 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.paipeng.usbcamera.utils.ImageUtil;
+import com.paipeng.usbcamera.widget.OverlayView;
 import com.paipeng.usbcamera.widget.SimpleUVCCameraTextureView;
+import com.paipeng.utschauth.AuthParam;
+import com.paipeng.utschauth.AuthResult;
+import com.paipeng.utschauth.CodeImage;
+import com.paipeng.utschauth.UtschAuthApi;
 import com.serenegiant.common.BaseActivity;
 import com.serenegiant.usb.CameraDialog;
 import com.serenegiant.usb.IFrameCallback;
@@ -36,8 +42,12 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
     private ImageView previewImageView;
     private ImageView registImageView;
+    private TextView authResultTextView;
 
-    private boolean registAuth;
+
+    private boolean registerSample;
+    private static CodeImage sampleCodeImage;
+    private AuthParam authParam;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -51,8 +61,19 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
         previewImageView = findViewById(R.id.previewImageView);
         registImageView = findViewById(R.id.registImageView);
-        
+        authResultTextView = findViewById(R.id.authResultTextView);
+
+
         mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
+
+        this.authParam = new AuthParam();
+
+
+        authParam.corr_shift = 8;
+        authParam.corr_size = 32;
+        authParam.mode_col = 20;
+        authParam.mode_row = 20;
+        authParam.mode_size = 20;
     }
 
     @Override
@@ -106,7 +127,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                 } else {
                     //releaseCamera();
 
-                    registAuth = true;
+                    registerSample = true;
                 }
             }
         }
@@ -258,15 +279,29 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
 
 
-                if (registAuth) {
+                if (registerSample) {
                     registImageView.setImageBitmap(cropBitmap);
-                    registAuth = false;
+                    sampleCodeImage = com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(bitmap);
+
+                    UtschAuthApi.getInstance().utschRegister(sampleCodeImage, authParam);
+
+                    registerSample = false;
                 } else {
                     previewImageView.setImageBitmap(cropBitmap);
+                    if (sampleCodeImage != null) {
+                        AuthResult authResult = new AuthResult();
+                        int ret = UtschAuthApi.getInstance().utschAuth(com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(bitmap),
+                                null, authParam, authResult);
+                        if (ret == 0) {
+                            // Log.d("MainActivity", "utsch-auth result: " + authResult.accu + " score: " + authResult.authent_score);
+                            authResultTextView.setText(String.format("Auth mean score: %.03f (modi: %.03f)", authResult.mean_authent_score, authResult.modi_authent_score));
+                        } else {
+                            Toast.makeText(MainActivity.this, String.format("utschAuth err: %d", ret), Toast.LENGTH_SHORT);
+                        }
+                    }
                 }
             }
             frame.clear();
-            //mImageView.post(mUpdateImageTask);
         }
     };
 	/*
