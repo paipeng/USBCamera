@@ -31,7 +31,7 @@ import com.serenegiant.usb.UVCCamera;
 import java.nio.ByteBuffer;
 
 public final class MainActivity extends BaseActivity implements CameraDialog.CameraDialogParent {
-
+    private static final String TAG = MainActivity.class.getSimpleName();
     private final Object mSync = new Object();
     private USBMonitor mUSBMonitor;
     private UVCCamera mUVCCamera;
@@ -293,8 +293,13 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
                     registerSample = false;
                 } else {
-                    String qrData = ImageUtil.decodeWithZxing(bitmap);
-                    previewImageView.setImageBitmap(grayBitmap);
+                    Bitmap paddingBitmap = ImageUtil.paddingBitmap(bitmap, 0, (bitmap.getWidth() - bitmap.getHeight())/2);
+                    Bitmap resizeBitmap = ImageUtil.resizedBitmap(paddingBitmap, paddingBitmap.getWidth()/4, paddingBitmap.getHeight()/4);
+                    Bitmap grayBitmap2 = ImageUtil.getGrayBitmap(resizeBitmap);
+                    Bitmap blurBitmap = ImageUtil.blurImage(MainActivity.this, grayBitmap2);
+                    // Log.d(TAG, "grayBitmap2 size: " + grayBitmap2.getWidth() + "-" + grayBitmap2.getHeight());
+                    String qrData = ImageUtil.decodeWithZxing(blurBitmap);
+                    previewImageView.setImageBitmap(blurBitmap);
                     if (sampleCodeImage != null) {
                         AuthResult authResult = new AuthResult();
                         int ret = UtschAuthApi.getInstance().utschAuth(com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(bitmap),

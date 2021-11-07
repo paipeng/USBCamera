@@ -1,11 +1,18 @@
 package com.paipeng.usbcamera.utils;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicBlur;
 import android.util.Log;
 
 import com.google.zxing.BarcodeFormat;
@@ -32,7 +39,6 @@ public class ImageUtil {
     }
 
 
-
     // 图片灰化处理
     public static Bitmap getGrayBitmap(Bitmap bmp) {
         // Bitmap mBitmap = BitmapFactory.decodeResource(getResources(),
@@ -53,6 +59,42 @@ public class ImageUtil {
         mCanvas.drawBitmap(bmp, 0, 0, mPaint);
 
         return mGrayBitmap;
+    }
+
+
+    public static Bitmap resizedBitmap(Bitmap oldBt, int newWidth, int newHeight) {
+        if (oldBt == null || oldBt.isRecycled()) {
+            return null;
+        }
+        try {
+            // 获取这个图片的宽和高
+            int width = oldBt.getWidth();
+            int height = oldBt.getHeight();
+
+            // 计算缩放率，新尺寸除原始尺寸
+            float scaleWidth = ((float) newWidth) / width;
+            float scaleHeight = ((float) newHeight) / height;
+
+            // 创建操作图片用的matrix对象
+            Matrix matrix = new Matrix();
+
+            // 缩放图片动作
+            matrix.postScale(scaleWidth, scaleHeight);
+
+            // 创建新的图片
+            return Bitmap.createBitmap(oldBt, 0, 0, width, height, matrix, true);
+        } catch (Exception | Error exception) {
+            Log.e(TAG, "resizedBitmap " + exception.getMessage());
+        }
+        return null;
+    }
+
+    public static Bitmap paddingBitmap(Bitmap Src, int padding_x, int padding_y) {
+        Bitmap outputimage = Bitmap.createBitmap(Src.getWidth() + padding_x * 2, Src.getHeight() + padding_y * 2, Bitmap.Config.ARGB_8888);
+        Canvas can = new Canvas(outputimage);
+        can.drawARGB(0xFF, 0xFF, 0xFF, 0xFF); //This represents White color
+        can.drawBitmap(Src, padding_x, padding_y, null);
+        return outputimage;
     }
 
 
@@ -150,5 +192,31 @@ public class ImageUtil {
             }
         }
         return rawResult != null ? rawResult.getText() : null;
+    }
+
+
+    @SuppressLint("NewApi")
+    public static Bitmap blurImage(Context context, Bitmap input) {
+        try {
+            RenderScript rsScript = RenderScript.create(context);
+            Allocation alloc = Allocation.createFromBitmap(rsScript, input);
+
+            ScriptIntrinsicBlur blur = ScriptIntrinsicBlur.create(rsScript, Element.U8_4(rsScript));
+            blur.setRadius(3);
+            blur.setInput(alloc);
+
+            Bitmap result = Bitmap.createBitmap(input.getWidth(), input.getHeight(), Bitmap.Config.ARGB_8888);
+            Allocation outAlloc = Allocation.createFromBitmap(rsScript, result);
+
+            blur.forEach(outAlloc);
+            outAlloc.copyTo(result);
+
+            rsScript.destroy();
+            return result;
+        } catch (Exception e) {
+            // TODO: handle exception
+            return input;
+        }
+
     }
 }
