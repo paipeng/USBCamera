@@ -31,8 +31,6 @@ public class OverlayView extends View {
         super.onDraw(canvas);
         Log.d("TAG", "onDraw: " + getWidth() + "-" + getHeight());
 
-
-
         // 1080 -> 640
         // x -> 400;
         int frameWidth = getWidth()*400/640;
@@ -41,15 +39,12 @@ public class OverlayView extends View {
         Rect focusFrame = new Rect();
         focusFrame.top = (getHeight() - frameHeight) / 2;
         focusFrame.left = (getWidth() - frameWidth)/ 2;
-        Log.d("TAG", "onDraw: " + focusFrame.top + "  " + focusFrame.left);
+
 
         focusFrame.bottom = frameHeight + focusFrame.top;
         focusFrame.right = frameWidth + focusFrame.left;
 
 
-        Log.d("TAG", "onDraw: " + focusFrame);
-        Log.d("TAG", "onDraw: " + focusFrame.bottom + "  " + focusFrame.right);
-        Log.d("TAG", "onDraw: " + focusFrame.top + "  " + focusFrame.left);
         Paint myPaint = new Paint();
         myPaint.setColor(Color.rgb(0, 0, 0));
         myPaint.setStrokeWidth(2);

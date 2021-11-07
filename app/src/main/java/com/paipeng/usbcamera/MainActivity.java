@@ -1,6 +1,7 @@
 package com.paipeng.usbcamera;
 
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.paipeng.usbcamera.utils.ImageUtil;
 import com.paipeng.usbcamera.widget.SimpleUVCCameraTextureView;
 import com.serenegiant.common.BaseActivity;
 import com.serenegiant.usb.CameraDialog;
@@ -33,6 +35,9 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     private Surface mPreviewSurface;
 
     private ImageView previewImageView;
+    private ImageView registImageView;
+
+    private boolean registAuth;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -45,6 +50,8 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
         mUVCCameraView.setAspectRatio(UVCCamera.DEFAULT_PREVIEW_WIDTH / (float) UVCCamera.DEFAULT_PREVIEW_HEIGHT);
 
         previewImageView = findViewById(R.id.previewImageView);
+        registImageView = findViewById(R.id.registImageView);
+        
         mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
     }
 
@@ -97,7 +104,9 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                 if (mUVCCamera == null) {
                     CameraDialog.showDialog(MainActivity.this);
                 } else {
-                    releaseCamera();
+                    //releaseCamera();
+
+                    registAuth = true;
                 }
             }
         }
@@ -237,7 +246,24 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
             //
             synchronized (bitmap) {
                 bitmap.copyPixelsFromBuffer(frame);
-                previewImageView.setImageBitmap(bitmap);
+                int cropWidth = 400;
+                Rect cropRect = new Rect();
+                cropRect.left = (bitmap.getWidth() - cropWidth)/2;
+                cropRect.top = (bitmap.getHeight() - cropWidth)/2;
+
+                cropRect.right = cropRect.left + cropWidth;
+                cropRect.bottom = cropRect.top + cropWidth;
+
+                Bitmap cropBitmap = ImageUtil.cropBitmap(bitmap, cropRect);
+
+
+
+                if (registAuth) {
+                    registImageView.setImageBitmap(cropBitmap);
+                    registAuth = false;
+                } else {
+                    previewImageView.setImageBitmap(cropBitmap);
+                }
             }
             frame.clear();
             //mImageView.post(mUpdateImageTask);
