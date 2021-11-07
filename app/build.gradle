@@ -1,0 +1,54 @@
+apply plugin: 'com.android.application'
+
+android {
+	compileSdkVersion versionCompiler
+	buildToolsVersion versionBuildTool
+
+	compileOptions {
+		sourceCompatibility javaSourceCompatibility
+		targetCompatibility javaTargetCompatibility
+	}
+
+    defaultConfig {
+        applicationId "com.paipeng.usbcamera"
+        minSdkVersion 21
+		targetSdkVersion versionTarget
+		versionCode 8
+		versionName "3.00"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
+        }
+    }
+}
+
+
+repositories {
+
+	flatDir { dirs 'libs', 'jniLibs' }
+	maven { url "https://jitpack.io" }
+	maven { url 'https://maven.aliyun.com/nexus/content/groups/public/'}
+}
+
+
+dependencies {
+	//api fileTree(dir: 'libs', include: ['*.jar'])
+	//api fileTree(dir: 'libs', include: ['*.aar'])
+	//implementation fileTree(include: ['*.jar'], dir: 'libs')
+	//implementation fileTree(include: ['*.aar'], dir: 'libs')
+
+
+	implementation(name: 'libuvccamera', ext: 'aar')
+	//implementation(name: 'usbCameraCommon', ext: 'aar')
+
+	implementation "com.android.support:support-v4:${supportLibVersion}"
+	implementation "com.android.support:support-annotations:${supportLibVersion}"
+
+	implementation("com.serenegiant:common:${commonLibVersion}") {
+		exclude module: 'support-v4'
+	}
+	//implementation project(':libuvccamera')
+}
