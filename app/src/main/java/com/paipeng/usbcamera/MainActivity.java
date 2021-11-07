@@ -284,6 +284,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                 cropRect.bottom = cropRect.top + AUTH_IMAGE_SIZE;
 
                 Bitmap cropBitmap = ImageUtil.cropBitmap(bitmap, cropRect);
+                Bitmap grayBitmap = ImageUtil.getGrayBitmap(cropBitmap);
                 if (registerSample) {
                     registImageView.setImageBitmap(grayBitmap);
                     sampleCodeImage = com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(bitmap);
@@ -292,14 +293,15 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
                     registerSample = false;
                 } else {
-                    previewImageView.setImageBitmap(cropBitmap);
+                    String qrData = ImageUtil.decodeWithZxing(bitmap);
+                    previewImageView.setImageBitmap(grayBitmap);
                     if (sampleCodeImage != null) {
                         AuthResult authResult = new AuthResult();
                         int ret = UtschAuthApi.getInstance().utschAuth(com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(bitmap),
                                 null, authParam, authResult);
                         if (ret == 0) {
                             // Log.d("MainActivity", "utsch-auth result: " + authResult.accu + " score: " + authResult.authent_score);
-                            authResultTextView.setText(String.format("Auth mean score: %.03f (modi: %.03f)", authResult.mean_authent_score, authResult.modi_authent_score));
+                            authResultTextView.setText(String.format("Auth mean score: %.03f (modi: %.03f)", authResult.mean_authent_score, authResult.modi_authent_score) + " qr: " + qrData);
                         } else {
                             Toast.makeText(MainActivity.this, String.format("utschAuth err: %d", ret), Toast.LENGTH_SHORT);
                         }

@@ -47,6 +47,8 @@ dependencies {
 	implementation "com.android.support:support-v4:${supportLibVersion}"
 	implementation "com.android.support:support-annotations:${supportLibVersion}"
 
+	implementation group: 'com.google.zxing', name: 'core', version: '3.3.3'
+
 	implementation("com.serenegiant:common:${commonLibVersion}") {
 		exclude module: 'support-v4'
 	}
