@@ -15,7 +15,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.paipeng.usbcamera.utils.ImageUtil;
-import com.paipeng.usbcamera.widget.OverlayView;
 import com.paipeng.usbcamera.widget.SimpleUVCCameraTextureView;
 import com.paipeng.utschauth.AuthParam;
 import com.paipeng.utschauth.AuthResult;
@@ -49,6 +48,8 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     private static CodeImage sampleCodeImage;
     private AuthParam authParam;
 
+    public static final int AUTH_IMAGE_SIZE = 462;
+
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,9 +72,16 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
         authParam.corr_shift = 8;
         authParam.corr_size = 32;
+
         authParam.mode_col = 20;
         authParam.mode_row = 20;
         authParam.mode_size = 20;
+
+
+        // QRCode
+        authParam.mode_col = 21;
+        authParam.mode_row = 21;
+        authParam.mode_size = 22;
     }
 
     @Override
@@ -267,20 +275,17 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
             //
             synchronized (bitmap) {
                 bitmap.copyPixelsFromBuffer(frame);
-                int cropWidth = 400;
-                Rect cropRect = new Rect();
-                cropRect.left = (bitmap.getWidth() - cropWidth)/2;
-                cropRect.top = (bitmap.getHeight() - cropWidth)/2;
 
-                cropRect.right = cropRect.left + cropWidth;
-                cropRect.bottom = cropRect.top + cropWidth;
+                Rect cropRect = new Rect();
+                cropRect.left = (bitmap.getWidth() - AUTH_IMAGE_SIZE)/2;
+                cropRect.top = (bitmap.getHeight() - AUTH_IMAGE_SIZE)/2;
+
+                cropRect.right = cropRect.left + AUTH_IMAGE_SIZE;
+                cropRect.bottom = cropRect.top + AUTH_IMAGE_SIZE;
 
                 Bitmap cropBitmap = ImageUtil.cropBitmap(bitmap, cropRect);
-
-
-
                 if (registerSample) {
-                    registImageView.setImageBitmap(cropBitmap);
+                    registImageView.setImageBitmap(grayBitmap);
                     sampleCodeImage = com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(bitmap);
 
                     UtschAuthApi.getInstance().utschRegister(sampleCodeImage, authParam);
