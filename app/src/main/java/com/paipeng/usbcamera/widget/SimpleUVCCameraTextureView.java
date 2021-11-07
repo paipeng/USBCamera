@@ -1,8 +1,17 @@
 package com.paipeng.usbcamera.widget;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.Rect;
+import android.graphics.SurfaceTexture;
 import android.util.AttributeSet;
+import android.view.Surface;
 import android.view.TextureView;
+
+import com.paipeng.usbcamera.R;
 
 public class SimpleUVCCameraTextureView extends TextureView    // API >= 14
         implements AspectRatioViewInterface {
@@ -11,14 +20,17 @@ public class SimpleUVCCameraTextureView extends TextureView    // API >= 14
 
     public SimpleUVCCameraTextureView(final Context context) {
         this(context, null, 0);
+        drawFocusFrame();
     }
 
     public SimpleUVCCameraTextureView(final Context context, final AttributeSet attrs) {
         this(context, attrs, 0);
+        drawFocusFrame();
     }
 
     public SimpleUVCCameraTextureView(final Context context, final AttributeSet attrs, final int defStyle) {
         super(context, attrs, defStyle);
+        drawFocusFrame();
     }
 
     @Override
@@ -73,4 +85,36 @@ public class SimpleUVCCameraTextureView extends TextureView    // API >= 14
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
+
+    private void drawFocusFrame() {
+        //this.getOverlay().add(getResources().getDrawable(R.drawable.ic_launcher));
+
+        /*
+        SurfaceTexture surfaceTexture = getSurfaceTexture();
+
+        assert surfaceTexture != null;
+        //surfaceTexture.setDefaultBufferSize(imageDimension.getWidth(), imageDimension.getHeight());
+        Surface surface = new Surface(surfaceTexture);
+
+        Rect rect = new Rect();
+        rect.left = 0;
+        rect.right = 200;
+        rect.top = 0;
+        rect.bottom = 200;
+        Canvas canvas = surface.lockCanvas(rect);
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+        canvas.drawColor(Color.TRANSPARENT);
+
+        Paint myPaint = new Paint();
+        myPaint.setColor(Color.rgb(100, 20, 50));
+        myPaint.setStrokeWidth(10);
+        myPaint.setStyle(Paint.Style.STROKE);
+
+        canvas.drawCircle(100, 100, 100, myPaint);
+
+        surface.unlockCanvasAndPost(canvas);
+
+
+         */
+    }
 }

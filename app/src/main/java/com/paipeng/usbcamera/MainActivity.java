@@ -46,7 +46,6 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
         previewImageView = findViewById(R.id.previewImageView);
         mUSBMonitor = new USBMonitor(this, mOnDeviceConnectListener);
-
     }
 
     @Override
@@ -230,20 +229,20 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
     // if you need frame data as byte array on Java side, you can use this callback method with UVCCamera#setFrameCallback
     // if you need to create Bitmap in IFrameCallback, please refer following snippet.
-	final Bitmap bitmap = Bitmap.createBitmap(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, Bitmap.Config.RGB_565);
-	private final IFrameCallback mIFrameCallback = new IFrameCallback() {
-		@Override
-		public void onFrame(final ByteBuffer frame) {
+    final Bitmap bitmap = Bitmap.createBitmap(UVCCamera.DEFAULT_PREVIEW_WIDTH, UVCCamera.DEFAULT_PREVIEW_HEIGHT, Bitmap.Config.RGB_565);
+    private final IFrameCallback mIFrameCallback = new IFrameCallback() {
+        @Override
+        public void onFrame(final ByteBuffer frame) {
             Log.i("MainActivity", "onFrame");
-			//
-			synchronized (bitmap) {
-				bitmap.copyPixelsFromBuffer(frame);
+            //
+            synchronized (bitmap) {
+                bitmap.copyPixelsFromBuffer(frame);
                 previewImageView.setImageBitmap(bitmap);
-			}
+            }
             frame.clear();
-			//mImageView.post(mUpdateImageTask);
-		}
-	};
+            //mImageView.post(mUpdateImageTask);
+        }
+    };
 	/*
 	private final Runnable mUpdateImageTask = new Runnable() {
 		@Override
