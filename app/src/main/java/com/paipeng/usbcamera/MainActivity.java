@@ -287,7 +287,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                 Bitmap grayBitmap = ImageUtil.getGrayBitmap(cropBitmap);
                 if (registerSample) {
                     registImageView.setImageBitmap(grayBitmap);
-                    sampleCodeImage = com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(bitmap);
+                    sampleCodeImage = com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(grayBitmap);
 
                     UtschAuthApi.getInstance().utschRegister(sampleCodeImage, authParam);
 
@@ -302,7 +302,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                     previewImageView.setImageBitmap(blurBitmap);
                     if (sampleCodeImage != null) {
                         AuthResult authResult = new AuthResult();
-                        int ret = UtschAuthApi.getInstance().utschAuth(com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(bitmap),
+                        int ret = UtschAuthApi.getInstance().utschAuth(com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(grayBitmap),
                                 null, authParam, authResult);
                         if (ret == 0) {
                             // Log.d("MainActivity", "utsch-auth result: " + authResult.accu + " score: " + authResult.authent_score);
