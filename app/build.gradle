@@ -45,6 +45,7 @@ dependencies {
 
 	implementation(name: 'libuvccamera', ext: 'aar')
 	implementation(name: 'libutschauth', ext: 'aar')
+	implementation(name: 'libauthclient', ext: 'aar')
 
 	implementation "com.android.support:support-v4:${supportLibVersion}"
 	implementation "com.android.support:support-annotations:${supportLibVersion}"
