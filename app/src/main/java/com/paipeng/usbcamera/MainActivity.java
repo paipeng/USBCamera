@@ -64,7 +64,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     private boolean getProduct;
 
 
-    public static final int AUTH_IMAGE_SIZE = 298;
+    public static final int AUTH_IMAGE_SIZE = 462;
 
 
     @Override
@@ -400,6 +400,9 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                     if (sampleCodeImage != null) {
                         Log.d(TAG, "compare utsch-auth sampleCodeImage: " + sampleCodeImage.width + "-" + sampleCodeImage.height + " sampleCodeImage: " + sampleCodeImage);
                         AuthResult authResult = new AuthResult();
+
+                        //resizeBitmap = ImageUtil.resizedBitmap(grayBitmap, 462, 462);
+
                         CodeImage codeImage = com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(grayBitmap);
                         if (codeImage != null) {
                             Log.d(TAG, "codeImage: " + codeImage.width + "-" + codeImage.height);
@@ -549,6 +552,12 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                     Bitmap bitmap = ImageUtil.convertByteArrayToBitmap(data);
                     if (bitmap != null) {
                         Log.d(TAG, "getAuthorizationImage to Bitmap valid");
+                        // resize if needed
+
+                        if (bitmap.getWidth() != 462) {
+                            bitmap = ImageUtil.resizedBitmap(bitmap, 462, 462);
+                        }
+
                         registImageView.setImageBitmap(bitmap);
                         sampleCodeImage = com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(bitmap);
                         Log.d(TAG, "sampleCodeImage: " + sampleCodeImage);
