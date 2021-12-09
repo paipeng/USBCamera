@@ -61,6 +61,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     private User user;
     private Product product;
     private String qrData;
+    private boolean getProduct;
 
 
     public static final int AUTH_IMAGE_SIZE = 298;
@@ -396,21 +397,26 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                     }
 
                     previewImageView.setImageBitmap(blurBitmap);
-                    if (sampleCodeImage != null && false) {
-                        Log.d(TAG, "compare utsch-auth");
+                    if (sampleCodeImage != null) {
+                        Log.d(TAG, "compare utsch-auth sampleCodeImage: " + sampleCodeImage.width + "-" + sampleCodeImage.height + " sampleCodeImage: " + sampleCodeImage);
                         AuthResult authResult = new AuthResult();
-                        int ret = UtschAuthApi.getInstance().utschAuth(com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(grayBitmap),
-                                null, authParam, authResult);
-                        Log.d(TAG, "utschAuth ret: " + ret);
-                        if (ret == 0) {
-                            runOnUiThread(() -> {
-                                authResultTextView.setText(String.format("Auth mean score: %.03f (modi: %.03f)", authResult.mean_authent_score, authResult.modi_authent_score) + " qr: " + qrData);
-                            });
-                            // Log.d("MainActivity", "utsch-auth result: " + authResult.accu + " score: " + authResult.authent_score);
+                        CodeImage codeImage = com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(grayBitmap);
+                        if (codeImage != null) {
+                            Log.d(TAG, "codeImage: " + codeImage.width + "-" + codeImage.height);
+                            int ret = UtschAuthApi.getInstance().utschAuth(codeImage, null, authParam, authResult);
+                            Log.d(TAG, "utschAuth ret: " + ret);
+                            if (ret == 0) {
+                                runOnUiThread(() -> {
+                                    authResultTextView.setText(String.format("Auth mean score: %.03f (modi: %.03f)", authResult.mean_authent_score, authResult.modi_authent_score) + " qr: " + qrData);
+                                });
+                                // Log.d("MainActivity", "utsch-auth result: " + authResult.accu + " score: " + authResult.authent_score);
+                            } else {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(MainActivity.this, String.format("utschAuth err: %d", ret), Toast.LENGTH_SHORT);
+                                });
+                            }
                         } else {
-                            runOnUiThread(() -> {
-                                Toast.makeText(MainActivity.this, String.format("utschAuth err: %d", ret), Toast.LENGTH_SHORT);
-                            });
+                            Log.e(TAG, "codeImage invalid");
                         }
                     }
                 }
@@ -421,39 +427,46 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
     private synchronized void getProductByBarcode(String qrData) {
         Log.d(TAG, "getProductByBarcode: " + qrData);
-        authClient.getProductByBarcode(qrData, new HttpClientCallback() {
-            @Override
-            public void onSuccess(Object value) {
-                product = (Product) value;
-                Log.d(TAG, "onSuccess: " + product);
-                if (product != null) {
-                    // TODO read authorizations of this product
-                    getAuthorizationsByProduct();
+        if (!getProduct) {
+            getProduct = true;
+            Log.d(TAG, "do getProductByBarcode: " + qrData);
+            authClient.getProductByBarcode(qrData, new HttpClientCallback() {
+                @Override
+                public void onSuccess(Object value) {
+                    product = (Product) value;
+                    Log.d(TAG, "getProductByBarcode onSuccess: " + product);
+                    if (product != null) {
+                        // TODO read authorizations of this product
+                        getAuthorizationsByProduct();
 
-                    runOnUiThread(() -> {
-                        registerButton.setVisibility(View.INVISIBLE);
-                    });
-                } else {
+                        runOnUiThread(() -> {
+                            registerButton.setVisibility(View.INVISIBLE);
+                        });
+                    } else {
 
+                    }
+
+                    getProduct = false;
                 }
-            }
 
-            @Override
-            public void onFailure(int code, String message) {
-                Log.e(TAG, "onFailure: " + code + " message: " + message);
-                registerSample = false;
-                if (code == 404) {
-                    // TODO show register button
-                    runOnUiThread(() -> {
-                        registerButton.setVisibility(View.VISIBLE);
-                    });
-                } else {
-                    runOnUiThread(() -> {
-                        registerButton.setVisibility(View.INVISIBLE);
-                    });
+                @Override
+                public void onFailure(int code, String message) {
+                    Log.e(TAG, "getProductByBarcode onFailure: " + code + " message: " + message);
+                    registerSample = false;
+                    if (code == 404) {
+                        // TODO show register button
+                        runOnUiThread(() -> {
+                            registerButton.setVisibility(View.VISIBLE);
+                        });
+                    } else {
+                        runOnUiThread(() -> {
+                            registerButton.setVisibility(View.INVISIBLE);
+                        });
+                    }
+                    getProduct = false;
                 }
-            }
-        });
+            });
+        }
     }
 
     private synchronized void postAuthorization(Bitmap bitmap) {
@@ -525,19 +538,24 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
         // begin utsch-auth comparing
     }
 
-    private void getAuthorizationImage(String filePath) {
+    private synchronized void getAuthorizationImage(String filePath) {
         Log.d(TAG, "getAuthorizationImage: " + filePath);
         authClient.getImageBytes(filePath, new HttpClientCallback() {
             @Override
             public void onSuccess(Object value) {
                 if (value != null) {
                     byte[] data = (byte[]) value;
+                    Log.d(TAG, "getAuthorizationImage onSuccess: " + data.length);
                     Bitmap bitmap = ImageUtil.convertByteArrayToBitmap(data);
                     if (bitmap != null) {
+                        Log.d(TAG, "getAuthorizationImage to Bitmap valid");
                         registImageView.setImageBitmap(bitmap);
                         sampleCodeImage = com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(bitmap);
+                        Log.d(TAG, "sampleCodeImage: " + sampleCodeImage);
 
-                        UtschAuthApi.getInstance().utschRegister(sampleCodeImage, authParam);
+                        int ret = UtschAuthApi.getInstance().utschRegister(sampleCodeImage, authParam);
+                        Log.d(TAG, "utschRegister ret: " + ret);
+
                     } else {
                         Log.e(TAG, "bitmap invalid");
                     }
@@ -549,7 +567,6 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
             @Override
             public void onFailure(int code, String message) {
                 Log.e(TAG, "getAuthorizationImage onFailure: " + code + " messae: " + message);
-
             }
         });
 
