@@ -17,17 +17,10 @@ android {
 		versionName "3.00"
     }
 
-    buildTypes {
-        release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-project.txt'
-        }
-    }
 }
 
 
 repositories {
-
 	flatDir { dirs 'libs', 'jniLibs' }
 	maven { url "https://jitpack.io" }
 	maven { url 'https://maven.aliyun.com/nexus/content/groups/public/'}
