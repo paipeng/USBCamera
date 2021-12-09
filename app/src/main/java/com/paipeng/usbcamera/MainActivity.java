@@ -62,6 +62,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     private Product product;
     private String qrData;
     private boolean getProduct;
+    private ImageView resultImageView;
 
 
     public static final int AUTH_IMAGE_SIZE = 462;
@@ -71,6 +72,8 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        resultImageView = findViewById(R.id.resultImageView);
+        resultImageView.setVisibility(View.INVISIBLE);
         registerButton = findViewById(R.id.registerButton);
         registerButton.setVisibility(View.INVISIBLE);
         registerButton.setOnClickListener(new OnClickListener() {
@@ -396,7 +399,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                         }
                     }
 
-                    previewImageView.setImageBitmap(blurBitmap);
+                    previewImageView.setImageBitmap(grayBitmap);
                     if (sampleCodeImage != null) {
                         Log.d(TAG, "compare utsch-auth sampleCodeImage: " + sampleCodeImage.width + "-" + sampleCodeImage.height + " sampleCodeImage: " + sampleCodeImage);
                         AuthResult authResult = new AuthResult();
@@ -406,11 +409,16 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                         CodeImage codeImage = com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(grayBitmap);
                         if (codeImage != null) {
                             Log.d(TAG, "codeImage: " + codeImage.width + "-" + codeImage.height);
-                            int ret = UtschAuthApi.getInstance().utschAuth(codeImage, null, authParam, authResult);
+                            int ret = UtschAuthApi.getInstance().utschAuth(codeImage, sampleCodeImage, authParam, authResult);
                             Log.d(TAG, "utschAuth ret: " + ret);
                             if (ret == 0) {
                                 runOnUiThread(() -> {
                                     authResultTextView.setText(String.format("Auth mean score: %.03f (modi: %.03f)", authResult.mean_authent_score, authResult.modi_authent_score) + " qr: " + qrData);
+                                    if (authResult.mean_authent_score > 0.85) {
+                                        resultImageView.setVisibility(View.VISIBLE);
+                                    } else {
+                                        resultImageView.setVisibility(View.INVISIBLE);
+                                    }
                                 });
                                 // Log.d("MainActivity", "utsch-auth result: " + authResult.accu + " score: " + authResult.authent_score);
                             } else {
@@ -554,16 +562,14 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                         Log.d(TAG, "getAuthorizationImage to Bitmap valid");
                         // resize if needed
 
-                        if (bitmap.getWidth() != 462) {
-                            bitmap = ImageUtil.resizedBitmap(bitmap, 462, 462);
-                        }
+                        //bitmap = ImageUtil.resizedBitmap(bitmap, AUTH_IMAGE_SIZE, 462);
 
                         registImageView.setImageBitmap(bitmap);
                         sampleCodeImage = com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(bitmap);
                         Log.d(TAG, "sampleCodeImage: " + sampleCodeImage);
 
-                        int ret = UtschAuthApi.getInstance().utschRegister(sampleCodeImage, authParam);
-                        Log.d(TAG, "utschRegister ret: " + ret);
+                        //int ret = UtschAuthApi.getInstance().utschRegister(sampleCodeImage, authParam);
+                        //Log.d(TAG, "utschRegister ret: " + ret);
 
                     } else {
                         Log.e(TAG, "bitmap invalid");
