@@ -39,6 +39,8 @@ dependencies {
 	//api fileTree(dir: 'libs', include: ['*.aar'])
 	//implementation fileTree(include: ['*.jar'], dir: 'libs')
 	//implementation fileTree(include: ['*.aar'], dir: 'libs')
+    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '3.14.9'
+	implementation 'com.squareup.okhttp3:logging-interceptor:3.14.9'
 
 
 	implementation(name: 'libuvccamera', ext: 'aar')
