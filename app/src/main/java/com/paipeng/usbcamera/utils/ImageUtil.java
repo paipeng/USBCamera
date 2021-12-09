@@ -13,6 +13,7 @@ import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
+import android.util.Base64;
 import android.util.Log;
 
 import com.google.zxing.BarcodeFormat;
@@ -26,6 +27,7 @@ import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.qrcode.QRCodeReader;
 
+import java.io.ByteArrayOutputStream;
 import java.util.EnumMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -218,5 +220,29 @@ public class ImageUtil {
             return input;
         }
 
+    }
+
+    public static byte[] bmp2JpegBytes(Bitmap objBmp, int nQuality) {
+        if (objBmp == null)
+            return null;
+        ByteArrayOutputStream objArr = new ByteArrayOutputStream();
+        objBmp.compress(Bitmap.CompressFormat.JPEG, nQuality, objArr);
+        return objArr.toByteArray();
+    }
+
+
+    public static String bitmapToBase64(Bitmap bitmap) {
+        String str = null;
+        if (bitmap != null) {
+            AndroidBmpUtil androidBmpUtil = new AndroidBmpUtil();
+            byte[] arrData = androidBmpUtil.convertBytes(bitmap);
+            str = Base64.encodeToString(arrData, Base64.NO_WRAP);
+        }
+
+        return str;
+    }
+
+    public static Bitmap convertByteArrayToBitmap(byte[] bytes) {
+        return null;
     }
 }

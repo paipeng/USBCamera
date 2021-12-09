@@ -9,13 +9,17 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.paipeng.libauthclient.AuthClient;
 import com.paipeng.libauthclient.base.HttpClientCallback;
+import com.paipeng.libauthclient.model.Authorization;
+import com.paipeng.libauthclient.model.Product;
 import com.paipeng.libauthclient.model.User;
 import com.paipeng.usbcamera.utils.ImageUtil;
 import com.paipeng.usbcamera.widget.SimpleUVCCameraTextureView;
@@ -32,6 +36,8 @@ import com.serenegiant.usb.USBMonitor.UsbControlBlock;
 import com.serenegiant.usb.UVCCamera;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class MainActivity extends BaseActivity implements CameraDialog.CameraDialogParent {
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -45,7 +51,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     private ImageView previewImageView;
     private ImageView registImageView;
     private TextView authResultTextView;
-
+    private Button registerButton;
 
     private boolean registerSample;
     private static CodeImage sampleCodeImage;
@@ -53,6 +59,9 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     private AuthClient authClient;
     private static final String URL = "http://114.115.137.22";
     private User user;
+    private Product product;
+    private String qrData;
+
 
     public static final int AUTH_IMAGE_SIZE = 298;
 
@@ -61,6 +70,41 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        registerButton = findViewById(R.id.registerButton);
+        registerButton.setVisibility(View.INVISIBLE);
+        registerButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (user != null && qrData != null) {
+                    // register new product
+                    product = new Product();
+                    product.setUser(user);
+                    product.setBarcode(qrData);
+                    product.setName("Android test");
+                    product.setDescription("OTG usb camera capture");
+                    try {
+                        authClient.postProduct(product, new HttpClientCallback() {
+                            @Override
+                            public void onSuccess(Object value) {
+                                MainActivity.this.product = (Product)value;
+                                Log.d(TAG, "postProduct onSuccess: " + product);
+                                runOnUiThread(() -> {
+                                    Toast.makeText(MainActivity.this, "new product registered successfully: " + product.getBarcode(), Toast.LENGTH_SHORT);
+                                });
+                            }
+
+                            @Override
+                            public void onFailure(int code, String message) {
+                                Log.e(TAG, "postProduct onFailure: " + product);
+                            }
+                        });
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
         mCameraButton = findViewById(R.id.camera_button);
         mCameraButton.setOnClickListener(mOnClickListener);
 
@@ -103,6 +147,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                 public void onSuccess(Object value) {
                     MainActivity.this.user = ((User)value);
                     Log.d(TAG, "user token: " + ((User)value).getToken());
+                    authClient.setToken(MainActivity.this.user.getToken());
                 }
 
                 @Override
@@ -318,11 +363,11 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                 Bitmap cropBitmap = ImageUtil.cropBitmap(bitmap, cropRect);
                 Bitmap grayBitmap = ImageUtil.getGrayBitmap(cropBitmap);
                 if (registerSample) {
+                    Log.d(TAG, "registerSample");
                     registImageView.setImageBitmap(grayBitmap);
                     sampleCodeImage = com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(grayBitmap);
-
                     UtschAuthApi.getInstance().utschRegister(sampleCodeImage, authParam);
-
+                    uploadAuthorization(grayBitmap);
                     registerSample = false;
                 } else {
                     Bitmap paddingBitmap = ImageUtil.paddingBitmap(grayBitmap, 0, (grayBitmap.getWidth() - grayBitmap.getHeight())/2);
@@ -330,19 +375,59 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                     Bitmap grayBitmap2 = ImageUtil.getGrayBitmap(resizeBitmap);
                     Bitmap blurBitmap = ImageUtil.blurImage(MainActivity.this, grayBitmap2);
                     // Log.d(TAG, "grayBitmap2 size: " + grayBitmap2.getWidth() + "-" + grayBitmap2.getHeight());
-                    String qrData = ImageUtil.decodeWithZxing(blurBitmap);
+                    qrData = ImageUtil.decodeWithZxing(blurBitmap);
                     Log.d(TAG, "decodeWithZxing: " + qrData);
                     if (qrData != null) {
-                        Toast.makeText(MainActivity.this, String.format("decodeWithZxing: %d", qrData), Toast.LENGTH_SHORT);
+                        runOnUiThread(() -> {
+                            Toast.makeText(MainActivity.this, String.format("decodeWithZxing: %s", qrData), Toast.LENGTH_SHORT);
+                        });
+                        if ((product == null || !product.getBarcode().equals(qrData)) && user != null ) {
+                            authClient.getProductByBarcode(qrData, new HttpClientCallback() {
+                                @Override
+                                public void onSuccess(Object value) {
+                                    product = (Product) value;
+                                    Log.d(TAG, "getProductByBarcode: " + product);
+                                    if (product != null) {
+                                        // TODO read authorizations of this product
+                                        getAuthorizationsByProduct();
+
+                                    } else {
+
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(int code, String message) {
+                                    Log.e(TAG, "onFailure: " + code + " message: " + message);
+                                    registerSample = false;
+                                    if (code == 404) {
+                                        // TODO show register button
+                                        runOnUiThread(() -> {
+                                            registerButton.setVisibility(View.VISIBLE);
+                                        });
+                                    } else {
+                                        runOnUiThread(() -> {
+                                            registerButton.setVisibility(View.INVISIBLE);
+                                        });
+                                    }
+                                }
+                            });
+                        } else if (product != null && product.getBarcode().equals(qrData)) {
+                            Log.d(TAG, "product already exists for this scanned barcode: " + qrData);
+
+                        }
                     }
+
                     previewImageView.setImageBitmap(blurBitmap);
                     if (sampleCodeImage != null) {
                         AuthResult authResult = new AuthResult();
                         int ret = UtschAuthApi.getInstance().utschAuth(com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(grayBitmap),
                                 null, authParam, authResult);
                         if (ret == 0) {
+                            runOnUiThread(() -> {
+                                authResultTextView.setText(String.format("Auth mean score: %.03f (modi: %.03f)", authResult.mean_authent_score, authResult.modi_authent_score) + " qr: " + qrData);
+                            });
                             // Log.d("MainActivity", "utsch-auth result: " + authResult.accu + " score: " + authResult.authent_score);
-                            authResultTextView.setText(String.format("Auth mean score: %.03f (modi: %.03f)", authResult.mean_authent_score, authResult.modi_authent_score) + " qr: " + qrData);
                         } else {
                             Toast.makeText(MainActivity.this, String.format("utschAuth err: %d", ret), Toast.LENGTH_SHORT);
                         }
@@ -352,6 +437,103 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
             frame.clear();
         }
     };
+
+    private void uploadAuthorization(Bitmap bitmap) {
+        Log.d(TAG, "uploadAuthorization");
+        Authorization authorization = new Authorization();
+        String bitmapToBase64 = ImageUtil.bitmapToBase64(bitmap);
+        authorization.setImageBase64(bitmapToBase64);
+        authorization.setProduct(product);
+        authorization.setActivate(true);
+        try {
+            authClient.postAuthorization(authorization, new HttpClientCallback() {
+                @Override
+                public void onSuccess(Object value) {
+                    Log.d(TAG, "onSuccess");
+                    Log.d(TAG, ((Authorization)value).toString());
+                    List<Authorization> authorizations = product.getAuthorizations();
+                    if (authorizations != null) {
+                        authorizations.add(authorization);
+                    } else {
+                        authorizations = new ArrayList<>();
+                        authorizations.add(authorization);
+                        product.setAuthorizations(authorizations);
+                    }
+                }
+
+                @Override
+                public void onFailure(int code, String message) {
+                    Log.e(TAG, "postAuthorization onFailure: " + code + " message: " + message);
+
+                }
+            });
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void getAuthorizationsByProduct() {
+        Log.d(TAG, "getAuthorizationsByProduct");
+        authClient.getAuthorizationsByProductId(product.getId(), new HttpClientCallback() {
+            @Override
+            public void onSuccess(Object value) {
+                List<Authorization> authorizations = (List<Authorization>)value;
+                if (authorizations != null) {
+                    product.setAuthorizations(authorizations);
+                    if (authorizations.size() > 0) {
+                        getAuthorizationImage(authorizations.get(authorizations.size()-1).getFilePath());
+                    } else {
+                        runOnUiThread(() -> {
+                            registerButton.setVisibility(View.VISIBLE);
+                        });
+                    }
+                } else {
+                    Log.d(TAG, "no authorization for given product");
+                    authorizations = new ArrayList<>();
+                    product.setAuthorizations(authorizations);
+                    runOnUiThread(() -> {
+                        registerButton.setVisibility(View.VISIBLE);
+                    });
+                }
+            }
+
+            @Override
+            public void onFailure(int code, String message) {
+                Log.e(TAG, "getAuthorizationsByProduct onFailure: " + code + " messae: " + message);
+
+            }
+        });
+        // show image of authorization of this product
+
+        // begin utsch-auth comparing
+    }
+
+    private void getAuthorizationImage(String filePath) {
+        Log.d(TAG, "getAuthorizationImage: " + filePath);
+        authClient.getImageBytes(filePath, new HttpClientCallback() {
+            @Override
+            public void onSuccess(Object value) {
+                if (value != null) {
+                    byte[] data = (byte[]) value;
+                    Bitmap bitmap = ImageUtil.convertByteArrayToBitmap(data);
+                    registImageView.setImageBitmap(bitmap);
+                    sampleCodeImage = com.paipeng.utschauth.ImageUtil.convertBitmapToCodeImage(bitmap);
+
+                    UtschAuthApi.getInstance().utschRegister(sampleCodeImage, authParam);
+
+                } else {
+                    Log.d(TAG, "onSuccess data is null");
+                }
+            }
+
+            @Override
+            public void onFailure(int code, String message) {
+                Log.e(TAG, "getAuthorizationImage onFailure: " + code + " messae: " + message);
+
+            }
+        });
+
+    }
 	/*
 	private final Runnable mUpdateImageTask = new Runnable() {
 		@Override
