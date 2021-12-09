@@ -35,7 +35,7 @@ dependencies {
     implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.2.0'
 	implementation 'com.squareup.okhttp3:logging-interceptor:4.2.0'
 	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.9'
-
+	implementation 'com.github.yoanngoular:bitmapconverter:0.2.0'
 
 	implementation(name: 'libuvccamera', ext: 'aar')
 	implementation(name: 'libutschauth', ext: 'aar')

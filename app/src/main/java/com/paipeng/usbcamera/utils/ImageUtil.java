@@ -3,6 +3,7 @@ package com.paipeng.usbcamera.utils;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
@@ -26,8 +27,11 @@ import com.google.zxing.ReaderException;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.qrcode.QRCodeReader;
+import com.ygoular.bitmapconverter.BitmapConverter;
+import com.ygoular.bitmapconverter.BitmapFormat;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
 import java.util.EnumMap;
 import java.util.Hashtable;
 import java.util.Map;
@@ -204,7 +208,7 @@ public class ImageUtil {
             Allocation alloc = Allocation.createFromBitmap(rsScript, input);
 
             ScriptIntrinsicBlur blur = ScriptIntrinsicBlur.create(rsScript, Element.U8_4(rsScript));
-            blur.setRadius(3);
+            blur.setRadius(2);
             blur.setInput(alloc);
 
             Bitmap result = Bitmap.createBitmap(input.getWidth(), input.getHeight(), Bitmap.Config.ARGB_8888);
@@ -234,15 +238,19 @@ public class ImageUtil {
     public static String bitmapToBase64(Bitmap bitmap) {
         String str = null;
         if (bitmap != null) {
-            AndroidBmpUtil androidBmpUtil = new AndroidBmpUtil();
-            byte[] arrData = androidBmpUtil.convertBytes(bitmap);
-            str = Base64.encodeToString(arrData, Base64.NO_WRAP);
+            Log.d(TAG, "bitmapToBase64");
+            BitmapConverter bitmapConverter = new BitmapConverter();
+            byte [] bytes = bitmapConverter.convert(bitmap, BitmapFormat.BITMAP_8_BIT_COLOR);
+
+            Log.d(TAG, "encodeToString");
+            str = Base64.encodeToString(bytes, Base64.NO_WRAP);
         }
 
         return str;
     }
 
     public static Bitmap convertByteArrayToBitmap(byte[] bytes) {
-        return null;
+        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes,0,bytes.length);
+        return bitmap;
     }
 }
