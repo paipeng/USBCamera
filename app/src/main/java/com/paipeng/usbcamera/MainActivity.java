@@ -331,6 +331,10 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
                     Bitmap blurBitmap = ImageUtil.blurImage(MainActivity.this, grayBitmap2);
                     // Log.d(TAG, "grayBitmap2 size: " + grayBitmap2.getWidth() + "-" + grayBitmap2.getHeight());
                     String qrData = ImageUtil.decodeWithZxing(blurBitmap);
+                    Log.d(TAG, "decodeWithZxing: " + qrData);
+                    if (qrData != null) {
+                        Toast.makeText(MainActivity.this, String.format("decodeWithZxing: %d", qrData), Toast.LENGTH_SHORT);
+                    }
                     previewImageView.setImageBitmap(blurBitmap);
                     if (sampleCodeImage != null) {
                         AuthResult authResult = new AuthResult();
