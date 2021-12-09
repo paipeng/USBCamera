@@ -54,7 +54,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     private static final String URL = "http://114.115.137.22";
     private User user;
 
-    public static final int AUTH_IMAGE_SIZE = 462;
+    public static final int AUTH_IMAGE_SIZE = 298;
 
 
     @Override
