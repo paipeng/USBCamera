@@ -325,7 +325,7 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
 
                     registerSample = false;
                 } else {
-                    Bitmap paddingBitmap = ImageUtil.paddingBitmap(bitmap, 0, (bitmap.getWidth() - bitmap.getHeight())/2);
+                    Bitmap paddingBitmap = ImageUtil.paddingBitmap(grayBitmap, 0, (grayBitmap.getWidth() - grayBitmap.getHeight())/2);
                     Bitmap resizeBitmap = ImageUtil.resizedBitmap(paddingBitmap, paddingBitmap.getWidth()/4, paddingBitmap.getHeight()/4);
                     Bitmap grayBitmap2 = ImageUtil.getGrayBitmap(resizeBitmap);
                     Bitmap blurBitmap = ImageUtil.blurImage(MainActivity.this, grayBitmap2);
