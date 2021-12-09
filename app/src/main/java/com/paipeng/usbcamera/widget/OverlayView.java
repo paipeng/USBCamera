@@ -9,7 +9,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
-import static com.paipeng.usbcamera.MainActivity.AUTH_IMAGE_SIZE;
+import com.paipeng.usbcamera.MainActivity;
 
 public class OverlayView extends View {
     public OverlayView(Context context) {
@@ -35,7 +35,7 @@ public class OverlayView extends View {
 
         // 1080 -> 640
         // x -> 400;
-        int frameWidth = getWidth() * AUTH_IMAGE_SIZE / 640;
+        int frameWidth = getWidth() * MainActivity.AUTH_IMAGE_SIZE / 640;
         int frameHeight = frameWidth;
 
         Rect focusFrame = new Rect();
