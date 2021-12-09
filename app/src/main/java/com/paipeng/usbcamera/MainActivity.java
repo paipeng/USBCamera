@@ -14,6 +14,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.paipeng.libauthclient.AuthClient;
+import com.paipeng.libauthclient.base.HttpClientCallback;
+import com.paipeng.libauthclient.model.User;
 import com.paipeng.usbcamera.utils.ImageUtil;
 import com.paipeng.usbcamera.widget.SimpleUVCCameraTextureView;
 import com.paipeng.utschauth.AuthParam;
@@ -47,8 +50,12 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
     private boolean registerSample;
     private static CodeImage sampleCodeImage;
     private AuthParam authParam;
+    private AuthClient authClient;
+    private static final String URL = "http://114.115.137.22";
+    private User user;
 
     public static final int AUTH_IMAGE_SIZE = 462;
+
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -82,6 +89,31 @@ public final class MainActivity extends BaseActivity implements CameraDialog.Cam
         authParam.mode_col = 21;
         authParam.mode_row = 21;
         authParam.mode_size = 22;
+
+
+        authClient= new AuthClient(URL);
+
+
+        try {
+            User user1 = new User();
+            user1.setEmail("sipaipv6@gmail.com");
+            user1.setPassword("123456");
+            authClient.login(user1, new HttpClientCallback() {
+                @Override
+                public void onSuccess(Object value) {
+                    MainActivity.this.user = ((User)value);
+                    Log.d(TAG, "user token: " + ((User)value).getToken());
+                }
+
+                @Override
+                public void onFailure(int code, String message) {
+                    Log.e(TAG,"onFailure: " + code + " message: " + message);
+                    MainActivity.this.user = null;
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+        }
     }
 
     @Override
